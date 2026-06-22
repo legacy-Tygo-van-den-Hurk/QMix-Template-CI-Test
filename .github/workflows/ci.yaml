@@ -21,9 +21,19 @@ jobs:
         uses: cachix/install-nix-action@v31.7.0
       - name: Build QMK firmware using Nix and QMix
         run: nix build --print-build-logs
+      - name: Show result to debug this shit
+        run: tree "$PWD/result/"
+      - name: Find firmware files
+        id: find
+        run: |
+          shopt -s globstar nullglob
+          { echo 'files<<EOF'
+            printf '%s\n' result/**/*.{bin,hex}
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
       - name: Upload workflow artifact
         uses: actions/upload-artifact@v7.0.1
         with:
           if-no-files-found: error
           name: QMK firmware build using Nix and QMix
-          path: result/**/*.{hex,bin,uf2,eep}
+          path: ${{ steps.find.outputs.files }}
